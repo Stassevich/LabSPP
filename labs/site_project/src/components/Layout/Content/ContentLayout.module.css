@@ -1,0 +1,17 @@
+.content {
+  text-align: center;
+  flex: 1;
+  color: #fff;
+  background-color: #7590bc;
+  padding: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 64px);
+  margin: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.contentInner {
+  width: 100%;
+  box-sizing: border-box;
+}
