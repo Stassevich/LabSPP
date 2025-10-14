@@ -1,0 +1,29 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  height: 64px;
+  background-color: #4096ff;
+  flex-shrink: 0;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.navLeft {
+  display: flex;
+  gap: 20px;
+}
+
+.navItem {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.navItem:hover {
+  opacity: 0.8;
+}
