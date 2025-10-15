@@ -1,8 +1,9 @@
-import MainPage from './pages/MainPAge/MainPage';
+import MainPage from './pages/MainPage/MainPage';
+import ProjectPage from './pages/ProjectsPage/ProjectPage';
 
 
 const App = () => (
-  <MainPage/>
+  <ProjectPage/>
 );
 
 export default App;

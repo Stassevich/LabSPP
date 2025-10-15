@@ -1,0 +1,57 @@
+.card {
+  margin-bottom: 16px;
+}
+
+.projectTitle {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.descriptionColumn {
+  text-align: center;
+}
+
+.projectDescription {
+  color: #666;
+  line-height: 1.5;
+}
+
+.statsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.tagsContainer {
+  text-align: left;
+}
+
+/* Стили для тегов */
+.todoTag {
+  background-color: #f90bc1df !important;
+  border-color: #f90bc1df !important;
+  color: white !important;
+}
+
+.inProgressTag {
+  background-color: #4ea4f6ff !important;
+  border-color: #4ea4f6ff !important;
+  color: white !important;
+}
+
+.doneTag {
+  background-color: #76dd00ff !important;
+  border-color: #76dd00ff !important;
+  color: white !important;
+}
+
+.progressText {
+  text-align: center;
+}
+
+.progressPercent {
+  font-size: 18px;
+  font-weight: 600;
+}

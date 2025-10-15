@@ -11,14 +11,3 @@ export const truncateText = (text, maxLength = 50) => {
   return text.substr(0, maxLength) + '...';
 };
 
-export const debounce = (func, wait) => {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};  
