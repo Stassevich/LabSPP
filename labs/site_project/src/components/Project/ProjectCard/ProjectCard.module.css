@@ -16,7 +16,15 @@
   color: #666;
   line-height: 1.5;
 }
+.projectCardWrapper {
+  cursor: pointer;
+  transition: transform 0.2s;
+  margin-bottom: 16px;
+}
 
+.projectCardWrapper:hover {
+  transform: translateY(-2px);
+}
 .statsContainer {
   display: flex;
   align-items: center;

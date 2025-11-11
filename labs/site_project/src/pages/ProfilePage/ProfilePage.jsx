@@ -8,7 +8,10 @@ const ProfilePage = () => (
     <Layout className={styles.layout}>
       <HeaderLayout />
       <ContentLayout>
-        <p>Текст</p>
+        <div className={styles.profileContainer}>
+          <h1>Профиль пользователя</h1>
+          <p>Здесь будет информация о пользователе</p>
+        </div>
       </ContentLayout>
     </Layout>
   </div>

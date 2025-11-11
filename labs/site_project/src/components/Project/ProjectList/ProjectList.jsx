@@ -1,71 +1,57 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { useProject } from "../../../contexts/ProjectContext";
 import ProjectCard from "../ProjectCard/ProjectCard";
+import ProjectForm from "../ProjectForm/ProjectForm";
 import styles from "./ProjectList.module.css";
 
 const ProjectList = () => {
-  const [projects, setProjects] = useState([
-    {
-      id: 1,
-      title: "Project1",
-      description:
-        "Description1",
-      tasks: {
-        todo: 8,
-        inProgress: 4,
-        done: 33
-      },
-      status: "active",
-    },
-    {
-      id: 2,
-      title: "Project2",
-      description:
-        "Description2",
-      tasks: {
-        todo: 2,
-        inProgress: 1,
-        done: 75
-      },
-      status: "completed",
-    },
-    {
-      id: 3,
-      title: "Project3",
-      description:
-        "Description3",
-      tasks: {
-        todo: 15,
-        inProgress: 8,
-        done: 11
-      },
-      status: "active",
-    },
-  ]);
+  const { projects, addProject } = useProject();
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const navigate = useNavigate();
 
-  const updateProject = (projectId, updatedData) => {
-    setProjects(prevProjects => 
-      prevProjects.map(project => 
-        project.id === projectId ? { ...project, ...updatedData } : project
-      )
-    );
+  const handleProjectClick = (projectId) => {
+    navigate(`/projects/${projectId}`);
   };
 
-  const addProject = (newProject) => {
-    const projectWithId = {
-      ...newProject,
-      id: Date.now() 
-    };
-    setProjects(prevProjects => [...prevProjects, projectWithId]);
+  const handleCreateProject = (projectData) => {
+    addProject(projectData);
+    setIsFormVisible(false);
   };
 
   return (
     <div className={styles.container}>
-      {projects.map((project) => (
-        <ProjectCard 
-          key={project.id} 
-          project={project} 
-        />
-      ))}
+      <div className={styles.header}>
+        <h1 className={styles.title}>Мои проекты</h1>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />}
+          onClick={() => setIsFormVisible(true)}
+          className={styles.addButton}
+        >
+          Новый проект
+        </Button>
+      </div>
+
+      <div className={styles.projectsGrid}>
+        {projects.map((project) => (
+          <div 
+            key={project.id} 
+            className={styles.projectCardWrapper}
+            onClick={() => handleProjectClick(project.id)}
+          >
+            <ProjectCard project={project} />
+          </div>
+        ))}
+      </div>
+
+      <ProjectForm
+        visible={isFormVisible}
+        onCancel={() => setIsFormVisible(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 };

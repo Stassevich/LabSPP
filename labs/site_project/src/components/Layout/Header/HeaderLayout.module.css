@@ -1,29 +1,24 @@
 .header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  color: #fff;
-  height: 64px;
-  background-color: #4096ff;
-  flex-shrink: 0;
-  width: 100%;
-  padding: 0 20px;
+  align-items: center;
+  background: #001529;
+  color: white;
+  padding: 0 24px;
 }
 
 .navLeft {
   display: flex;
-  gap: 20px;
+  gap: 24px;
 }
 
 .navItem {
-  color: #fff;
-  text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.3s;
-  font-size: 16px;
-  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .navItem:hover {
-  opacity: 0.8;
+  background-color: rgba(255, 255, 255, 0.1);
 }

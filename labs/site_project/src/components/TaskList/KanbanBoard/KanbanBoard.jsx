@@ -2,7 +2,7 @@ import { Row, Col } from "antd";
 import TaskCard from "../TaskCard/TaskCard";
 import styles from "./KanbanBoard.module.css";
 
-const KanbanBoard = ({ tasks, onTaskUpdate }) => {
+const KanbanBoard = ({ tasks, onTaskUpdate, onEditTask, onDeleteTask }) => {
   const columns = [
     { 
       id: 'todo', 
@@ -73,6 +73,8 @@ const KanbanBoard = ({ tasks, onTaskUpdate }) => {
                     >
                       <TaskCard 
                         task={task} 
+                        onEdit={onEditTask}
+                        onDelete={onDeleteTask}
                       />
                     </div>
                   ))}
