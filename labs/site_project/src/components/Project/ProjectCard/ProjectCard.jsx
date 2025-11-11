@@ -1,23 +1,35 @@
 import { Card, Tag, Row, Col, Space, Progress } from "antd";
+import { useProject } from "../../../contexts/ProjectContext";
 import styles from "./ProjectCard.module.css";
 
 const ProjectCard = ({ project }) => {
-  const getTotalTasks = (tasks) => {
-    return tasks.todo + tasks.inProgress + tasks.done;
+  const { getProjectTasks } = useProject();
+  
+  const projectTasks = getProjectTasks(project.id);
+
+  const getTaskStats = () => {
+    const todo = projectTasks.filter(task => task.status === 'todo').length;
+    const inProgress = projectTasks.filter(task => task.status === 'inProgress').length;
+    const done = projectTasks.filter(task => task.status === 'done').length;
+    const total = projectTasks.length;
+
+    return { todo, inProgress, done, total };
   };
 
-  const getProgressPercent = (tasks) => {
-    const total = getTotalTasks(tasks);
-    return total > 0 ? Math.round((tasks.done / total) * 100) : 0;
+  const getProgressPercent = () => {
+    const stats = getTaskStats();
+    const total = stats.total;
+    return total > 0 ? Math.round((stats.done / total) * 100) : 0;
   };
 
-  const getProgressColors = (tasks) => {
-    const total = getTotalTasks(tasks);
+  const getProgressColors = () => {
+    const stats = getTaskStats();
+    const total = stats.total;
     if (total === 0) return ["#cccccc"];
 
-    const todoPercent = (tasks.todo / total) * 100;
-    const inProgressPercent = (tasks.inProgress / total) * 100;
-    const donePercent = (tasks.done / total) * 100;
+    const todoPercent = (stats.todo / total) * 100;
+    const inProgressPercent = (stats.inProgress / total) * 100;
+    const donePercent = (stats.done / total) * 100;
 
     return {
       "0%": "#f90bc1df",
@@ -29,8 +41,9 @@ const ProjectCard = ({ project }) => {
     };
   };
 
-  const progressPercent = getProgressPercent(project.tasks);
-  const progressColors = getProgressColors(project.tasks);
+  const taskStats = getTaskStats();
+  const progressPercent = getProgressPercent();
+  const progressColors = getProgressColors();
 
   return (
     <Card
@@ -59,17 +72,17 @@ const ProjectCard = ({ project }) => {
               <Space direction="vertical" size="small">
                 <div>
                   <Tag className={styles.todoTag}>
-                    ToDo: {project.tasks.todo}
+                    ToDo: {taskStats.todo}
                   </Tag>
                 </div>
                 <div>
                   <Tag className={styles.inProgressTag}>
-                    In Progress: {project.tasks.inProgress}
+                    In Progress: {taskStats.inProgress}
                   </Tag>
                 </div>
                 <div>
                   <Tag className={styles.doneTag}>
-                    Done: {project.tasks.done}
+                    Done: {taskStats.done}
                   </Tag>
                 </div>
               </Space>

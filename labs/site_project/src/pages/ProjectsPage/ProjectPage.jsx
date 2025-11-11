@@ -1,48 +1,35 @@
 import { useState, useMemo } from "react";
-import { Layout, Button } from "antd";
+import { useParams, useNavigate } from "react-router-dom";
+import { Layout, Button, notification } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { useProject } from "../../contexts/ProjectContext";
 import styles from "./ProjectPage.module.css";
 import HeaderLayout from "../../components/Layout/Header/HeaderLayout";
 import ContentLayout from "../../components/Layout/Content/ContentLayout";
 import KanbanBoard from "../../components/TaskList/KanbanBoard/KanbanBoard";
-import TaskForm from "../../components/TaskList/TaskForm/TaskForm";
+import TaskEditForm from "../../components/TaskList/TaskForm/TaskEditForm";
 
 const ProjectPage = () => {
-  const [project, setProject] = useState({
-    id: 1,
-    title: "Project Name",
-    description: "ProjectDescription",
-    status: "active"
-  });
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const projectId = parseInt(id);
 
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      projectId: 1,
-      title: "Task0",
-      description: "Description0",
-      assignee: "People31",
-      status: "todo"
-    },
-    {
-      id: 2,
-      projectId: 1,
-      title: "Task2",
-      description: "Description02",
-      assignee: "People32",
-      status: "inProgress"
-    },
-    {
-      id: 3,
-      projectId: 1,
-      title: "Task3",
-      description: "Description03",
-      assignee: "People3",
-      status: "done"
-    }
-  ]);
+  const { 
+    getProjectById, 
+    getProjectTasks, 
+    addTask, 
+    updateTask, 
+    deleteTask, 
+    updateTaskStatus 
+  } = useProject();
 
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [api, contextHolder] = notification.useNotification();
+
+  const project = getProjectById(projectId);
+  const tasks = getProjectTasks(projectId);
 
   const taskStats = useMemo(() => {
     const todo = tasks.filter(task => task.status === 'todo').length;
@@ -53,28 +40,104 @@ const ProjectPage = () => {
     return { todo, inProgress, done, total };
   }, [tasks]);
 
+  // Создание новой задачи
   const handleTaskCreate = (taskData) => {
-    const newTask = {
+    const newTaskData = {
       ...taskData,
-      id: Date.now(),
-      projectId: project.id
+      projectId: projectId
     };
 
-    setTasks(prevTasks => [...prevTasks, newTask]);
-
+    addTask(newTaskData);
     setIsFormVisible(false);
+    
+    api.success({
+      message: 'Задача создана',
+      description: `Задача "${taskData.title}" успешно создана.`,
+      placement: 'topRight',
+    });
   };
 
+  // Обновление статуса задачи через перетаскивание
   const handleTaskUpdate = (taskId, newStatus) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
+    updateTaskStatus(taskId, newStatus);
   };
+
+  // Редактирование задачи
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setIsEditing(true);
+    setIsFormVisible(true);
+  };
+
+  // Удаление задачи
+  const handleDeleteTask = (taskId) => {
+    const taskToDelete = tasks.find(task => task.id === taskId);
+    
+    deleteTask(taskId);
+    
+    api.success({
+      message: 'Задача удалена',
+      description: `Задача "${taskToDelete?.title}" успешно удалена.`,
+      placement: 'topRight',
+    });
+  };
+
+  // Сохранение изменений задачи
+  const handleTaskSave = (updatedData) => {
+    if (isEditing && editingTask) {
+      // Обновление существующей задачи
+      updateTask(editingTask.id, updatedData);
+      
+      api.success({
+        message: 'Задача обновлена',
+        description: `Задача "${updatedData.title}" успешно обновлена.`,
+        placement: 'topRight',
+      });
+    } else {
+      // Создание новой задачи
+      handleTaskCreate(updatedData);
+    }
+
+    // Сброс состояния формы
+    handleFormClose();
+  };
+
+  // Закрытие формы
+  const handleFormClose = () => {
+    setIsFormVisible(false);
+    setIsEditing(false);
+    setEditingTask(null);
+  };
+
+  // Открытие формы для создания новой задачи
+  const handleNewTask = () => {
+    setEditingTask(null);
+    setIsEditing(false);
+    setIsFormVisible(true);
+  };
+
+  if (!project) {
+    return (
+      <div className={styles.appContainer}>
+        <Layout className={styles.layout}>
+          <HeaderLayout />
+          <ContentLayout>
+            <div style={{ padding: '50px', textAlign: 'center' }}>
+              <h2>Проект не найден</h2>
+              <p>Проект с ID {projectId} не существует.</p>
+              <Button type="primary" onClick={() => navigate('/projects')}>
+                Вернуться к списку проектов
+              </Button>
+            </div>
+          </ContentLayout>
+        </Layout>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.appContainer}>
+      {contextHolder}
       <Layout className={styles.layout}>
         <HeaderLayout />
         <ContentLayout>
@@ -86,7 +149,7 @@ const ProjectPage = () => {
                 <Button 
                   type="primary" 
                   icon={<PlusOutlined />}
-                  onClick={() => setIsFormVisible(true)}
+                  onClick={handleNewTask}
                   className={styles.addButton}
                 >
                   Новая задача
@@ -120,13 +183,17 @@ const ProjectPage = () => {
               <KanbanBoard 
                 tasks={tasks} 
                 onTaskUpdate={handleTaskUpdate}
+                onEditTask={handleEditTask}
+                onDeleteTask={handleDeleteTask}
               />
             </div>
 
-            <TaskForm
+            <TaskEditForm
               visible={isFormVisible}
-              onCancel={() => setIsFormVisible(false)}
-              onSubmit={handleTaskCreate}
+              onCancel={handleFormClose}
+              onSubmit={handleTaskSave}
+              task={editingTask}
+              isEditing={isEditing}
             />
           </div>
         </ContentLayout>
