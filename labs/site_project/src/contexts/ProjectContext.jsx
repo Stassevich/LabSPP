@@ -1,115 +1,11 @@
 import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { projectService } from "../services/api";
 
-const STORAGE_KEY = "project-management-app";
-
-const loadState = () => {
-  try {
-    const serializedState = localStorage.getItem(STORAGE_KEY);
-    if (serializedState === null) {
-      return undefined;
-    }
-    return JSON.parse(serializedState);
-  } catch (err) {
-    console.error("Error loading state from localStorage:", err);
-    return undefined;
-  }
-};
-
-const saveState = (state) => {
-  try {
-    const serializedState = JSON.stringify(state);
-    localStorage.setItem(STORAGE_KEY, serializedState);
-  } catch (err) {
-    console.error("Error saving state to localStorage:", err);
-  }
-};
-
-// Начальное состояние
-const initialState = {
-  projects: [
-    {
-      id: 1,
-      title: "Веб-приложение для управления задачами",
-      description:
-        "Описание приложения. Много текста",
-      status: "active",
-      tasks: {
-        todo: 1,
-        inProgress: 1,
-        done: 1,
-      },
-    },
-    {
-      id: 2,
-      title: "Мобильное приложение",
-      description:
-        "Lorem ipsum dolor sit, amet consectetur adipisicing elit. At eveniet nulla error quos temporibus animi provident ea nobis hic quod explicabo, quidem consequuntur cupiditate minus consequatur velit doloribus expedita eos.",
-      status: "active",
-      tasks: {
-        todo: 0,
-        inProgress: 1,
-        done: 0,
-      },
-    },
-    {
-      id: 3,
-      title: "ерции",
-      description:
-       "Lorem ipsum dolor sit, amet consectetur adipisicing elit. At eveniet nulla error quos temporibus animi provident ea nobis hic quod explicabo, quidem consequuntur cupiditate minus consequatur velit doloribus expedita eos.",
-      status: "completed",
-      tasks: {
-        todo: 0,
-        inProgress: 0,
-        done: 1,
-      },
-    },
-  ],
-  tasks: [
-    {
-      id: 1,
-      projectId: 1,
-      title: "Проектирование архитектуры базы данных",
-      description:
-         "Lorem ipsum dolor sit, amet consectetur adipisicing elit. At eveniet nulla error quos temporibus animi provident ea nobis hic quod explicabo, quidem consequuntur cupiditate minus consequatur velit doloribus expedita eos.",
-      assignee: "Алексей Петров",
-      status: "done",
-    },
-    {
-      id: 2,
-      projectId: 1,
-      title: "Реализация компонента",
-      description: "Текст...",
-      assignee: "Мария Сидорова",
-      status: "inProgress",
-    },
-    {
-      id: 3,
-      projectId: 1,
-      title: "Интеграция",
-      description: "Текст...",
-      assignee: "Иван Козлов",
-      status: "todo",
-    },
-    {
-      id: 4,
-      projectId: 2,
-      title: "Дизайн мобильного приложения",
-      description: "Текст...",
-      assignee: "Ольга Новикова",
-      status: "inProgress",
-    },
-    {
-      id: 5,
-      projectId: 3,
-      title: "Настройка сервера",
-      description: "Текст...",
-      assignee: "Дмитрий Волков",
-      status: "done",
-    },
-  ],
-};
+const ProjectContext = createContext();
 
 const ACTION_TYPES = {
+  SET_PROJECTS: "SET_PROJECTS",
+  SET_TASKS: "SET_TASKS",
   ADD_PROJECT: "ADD_PROJECT",
   UPDATE_PROJECT: "UPDATE_PROJECT",
   DELETE_PROJECT: "DELETE_PROJECT",
@@ -117,74 +13,56 @@ const ACTION_TYPES = {
   UPDATE_TASK: "UPDATE_TASK",
   DELETE_TASK: "DELETE_TASK",
   UPDATE_TASK_STATUS: "UPDATE_TASK_STATUS",
-  LOAD_STATE: "LOAD_STATE",
 };
 
 const projectReducer = (state, action) => {
-  let newState;
-
   switch (action.type) {
-    case ACTION_TYPES.LOAD_STATE:
+    case ACTION_TYPES.SET_PROJECTS:
       return {
         ...state,
-        ...action.payload,
+        projects: action.payload,
       };
-
+    case ACTION_TYPES.SET_TASKS:
+      return {
+        ...state,
+        tasks: action.payload,
+      };
     case ACTION_TYPES.ADD_PROJECT:
-      newState = {
+      return {
         ...state,
         projects: [...state.projects, action.payload],
       };
-      break;
-
     case ACTION_TYPES.UPDATE_PROJECT:
-      newState = {
+      return {
         ...state,
         projects: state.projects.map((project) =>
-          project.id === action.payload.id
-            ? { ...project, ...action.payload.updates }
-            : project
+          project.id === action.payload.id ? action.payload : project
         ),
       };
-      break;
-
     case ACTION_TYPES.DELETE_PROJECT:
-      newState = {
+      return {
         ...state,
-        projects: state.projects.filter(
-          (project) => project.id !== action.payload
-        ),
-        tasks: state.tasks.filter((task) => task.projectId !== action.payload),
+        projects: state.projects.filter((project) => project.id !== action.payload),
       };
-      break;
-
     case ACTION_TYPES.ADD_TASK:
-      newState = {
+      return {
         ...state,
         tasks: [...state.tasks, action.payload],
       };
-      break;
-
     case ACTION_TYPES.UPDATE_TASK:
-      newState = {
+      return {
         ...state,
         tasks: state.tasks.map((task) =>
-          task.id === action.payload.id
-            ? { ...task, ...action.payload.updates }
-            : task
+          task.id === action.payload.id ? action.payload : task
         ),
       };
-      break;
-
     case ACTION_TYPES.DELETE_TASK:
-      newState = {
+      return {
         ...state,
         tasks: state.tasks.filter((task) => task.id !== action.payload),
       };
-      break;
-
     case ACTION_TYPES.UPDATE_TASK_STATUS:
-      newState = {
+      return {
         ...state,
         tasks: state.tasks.map((task) =>
           task.id === action.payload.taskId
@@ -192,100 +70,116 @@ const projectReducer = (state, action) => {
             : task
         ),
       };
-      break;
-
     default:
       return state;
   }
-
-  saveState(newState);
-  return newState;
 };
 
-const ProjectContext = createContext();
+const initialState = {
+  projects: [],
+  tasks: [],
+};
 
 export const ProjectProvider = ({ children }) => {
   const [state, dispatch] = useReducer(projectReducer, initialState);
 
   useEffect(() => {
-    const savedState = loadState();
-    if (savedState) {
-      dispatch({ type: ACTION_TYPES.LOAD_STATE, payload: savedState });
-    }
+    loadProjects();
+    loadTasks();
   }, []);
 
-  const addProject = (projectData) => {
-    const newProject = {
-      ...projectData,
-      id: Date.now(),
-      tasks: {
-        todo: 0,
-        inProgress: 0,
-        done: 0,
-      },
-    };
-    dispatch({ type: ACTION_TYPES.ADD_PROJECT, payload: newProject });
-  };
-
-  const updateProject = (projectId, updates) => {
-    dispatch({
-      type: ACTION_TYPES.UPDATE_PROJECT,
-      payload: { id: projectId, updates },
-    });
-  };
-
-  const deleteProject = (projectId) => {
-    dispatch({ type: ACTION_TYPES.DELETE_PROJECT, payload: projectId });
-  };
-
-  const addTask = (taskData) => {
-    const newTask = {
-      ...taskData,
-      id: Date.now(),
-    };
-    dispatch({ type: ACTION_TYPES.ADD_TASK, payload: newTask });
-  };
-
-  const updateTask = (taskId, updates) => {
-    dispatch({
-      type: ACTION_TYPES.UPDATE_TASK,
-      payload: { id: taskId, updates },
-    });
-  };
-
-  const deleteTask = (taskId) => {
-    dispatch({ type: ACTION_TYPES.DELETE_TASK, payload: taskId });
-  };
-
-  const updateTaskStatus = (taskId, newStatus) => {
-    dispatch({
-      type: ACTION_TYPES.UPDATE_TASK_STATUS,
-      payload: { taskId, newStatus },
-    });
-  };
-
-  const clearStorage = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    dispatch({ type: ACTION_TYPES.LOAD_STATE, payload: initialState });
-  };
-
-  const exportData = () => {
-    const data = {
-      projects: state.projects,
-      tasks: state.tasks,
-      exportedAt: new Date().toISOString(),
-    };
-    return JSON.stringify(data, null, 2);
-  };
-
-  const importData = (jsonData) => {
+  const loadProjects = async () => {
     try {
-      const data = JSON.parse(jsonData);
-      dispatch({ type: ACTION_TYPES.LOAD_STATE, payload: data });
-      return true;
+      const projects = await projectService.getProjects();
+      dispatch({ type: ACTION_TYPES.SET_PROJECTS, payload: projects });
     } catch (error) {
-      console.error("Error importing data:", error);
-      return false;
+      console.error("Error loading projects:", error);
+    }
+  };
+
+  const loadTasks = async () => {
+    try {
+      const tasks = await projectService.getTasks();
+      dispatch({ type: ACTION_TYPES.SET_TASKS, payload: tasks });
+    } catch (error) {
+      console.error("Error loading tasks:", error);
+    }
+  };
+
+  const addProject = async (projectData) => {
+    try {
+      const newProject = await projectService.createProject(projectData);
+      dispatch({ type: ACTION_TYPES.ADD_PROJECT, payload: newProject });
+      return newProject;
+    } catch (error) {
+      console.error("Error creating project:", error);
+      throw error;
+    }
+  };
+
+  const updateProject = async (projectId, updates) => {
+    try {
+      const updatedProject = await projectService.updateProject(projectId, updates);
+      dispatch({ type: ACTION_TYPES.UPDATE_PROJECT, payload: updatedProject });
+      return updatedProject;
+    } catch (error) {
+      console.error("Error updating project:", error);
+      throw error;
+    }
+  };
+
+  const deleteProject = async (projectId) => {
+    try {
+      await projectService.deleteProject(projectId);
+      dispatch({ type: ACTION_TYPES.DELETE_PROJECT, payload: projectId });
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      throw error;
+    }
+  };
+
+  const addTask = async (taskData) => {
+    try {
+      const newTask = await projectService.createTask(taskData);
+      dispatch({ type: ACTION_TYPES.ADD_TASK, payload: newTask });
+      return newTask;
+    } catch (error) {
+      console.error("Error creating task:", error);
+      throw error;
+    }
+  };
+
+  const updateTask = async (taskId, updates) => {
+    try {
+      const updatedTask = await projectService.updateTask(taskId, updates);
+      dispatch({ type: ACTION_TYPES.UPDATE_TASK, payload: updatedTask });
+      return updatedTask;
+    } catch (error) {
+      console.error("Error updating task:", error);
+      throw error;
+    }
+  };
+
+  const deleteTask = async (taskId) => {
+    try {
+      await projectService.deleteTask(taskId);
+      dispatch({ type: ACTION_TYPES.DELETE_TASK, payload: taskId });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      throw error;
+    }
+  };
+
+  const updateTaskStatus = async (taskId, newStatus) => {
+    try {
+      await projectService.updateTaskStatus(taskId, newStatus);
+      dispatch({
+        type: ACTION_TYPES.UPDATE_TASK_STATUS,
+        payload: { taskId, newStatus },
+      });
+    } catch (error) {
+      console.error("Error updating task status:", error);
+      throw error;
     }
   };
 
@@ -306,10 +200,7 @@ export const ProjectProvider = ({ children }) => {
     addTask,
     updateTask,
     deleteTask,
-    updateTaskStatus,    
-    clearStorage,
-    exportData,
-    importData,
+    updateTaskStatus,
     getProjectTasks,
     getProjectById,
   };

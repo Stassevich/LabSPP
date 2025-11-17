@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "antd";
+import { Button, notification } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useProject } from "../../../contexts/ProjectContext";
 import ProjectCard from "../ProjectCard/ProjectCard";
@@ -10,19 +10,35 @@ import styles from "./ProjectList.module.css";
 const ProjectList = () => {
   const { projects, addProject } = useProject();
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [api, contextHolder] = notification.useNotification();
   const navigate = useNavigate();
 
   const handleProjectClick = (projectId) => {
     navigate(`/projects/${projectId}`);
   };
 
-  const handleCreateProject = (projectData) => {
-    addProject(projectData);
-    setIsFormVisible(false);
+  const handleCreateProject = async (projectData) => {
+    try {
+      await addProject(projectData);
+      setIsFormVisible(false);
+      
+      api.success({
+        message: 'Проект создан',
+        description: `Проект "${projectData.title}" успешно создан.`,
+        placement: 'topRight',
+      });
+    } catch (error) {
+      api.error({
+        message: 'Ошибка',
+        description: 'Не удалось создать проект',
+        placement: 'topRight',
+      });
+    }
   };
 
   return (
     <div className={styles.container}>
+      {contextHolder}
       <div className={styles.header}>
         <h1 className={styles.title}>Мои проекты</h1>
         <Button 

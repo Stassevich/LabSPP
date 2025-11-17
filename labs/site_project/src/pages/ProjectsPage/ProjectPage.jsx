@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout, Button, notification } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
@@ -40,76 +40,97 @@ const ProjectPage = () => {
     return { todo, inProgress, done, total };
   }, [tasks]);
 
-  // Создание новой задачи
-  const handleTaskCreate = (taskData) => {
-    const newTaskData = {
-      ...taskData,
-      projectId: projectId
-    };
+  const handleTaskCreate = async (taskData) => {
+    try {
+      const newTaskData = {
+        ...taskData,
+        projectId: projectId
+      };
 
-    addTask(newTaskData);
-    setIsFormVisible(false);
-    
-    api.success({
-      message: 'Задача создана',
-      description: `Задача "${taskData.title}" успешно создана.`,
-      placement: 'topRight',
-    });
+      await addTask(newTaskData);
+      setIsFormVisible(false);
+      
+      api.success({
+        message: 'Задача создана',
+        description: `Задача "${taskData.title}" успешно создана.`,
+        placement: 'topRight',
+      });
+    } catch (error) {
+      api.error({
+        message: 'Ошибка',
+        description: 'Не удалось создать задачу',
+        placement: 'topRight',
+      });
+    }
   };
 
-  // Обновление статуса задачи через перетаскивание
-  const handleTaskUpdate = (taskId, newStatus) => {
-    updateTaskStatus(taskId, newStatus);
+  const handleTaskUpdate = async (taskId, newStatus) => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+    } catch (error) {
+      api.error({
+        message: 'Ошибка',
+        description: 'Не удалось обновить статус задачи',
+        placement: 'topRight',
+      });
+    }
   };
 
-  // Редактирование задачи
   const handleEditTask = (task) => {
     setEditingTask(task);
     setIsEditing(true);
     setIsFormVisible(true);
   };
 
-  // Удаление задачи
-  const handleDeleteTask = (taskId) => {
-    const taskToDelete = tasks.find(task => task.id === taskId);
-    
-    deleteTask(taskId);
-    
-    api.success({
-      message: 'Задача удалена',
-      description: `Задача "${taskToDelete?.title}" успешно удалена.`,
-      placement: 'topRight',
-    });
-  };
-
-  // Сохранение изменений задачи
-  const handleTaskSave = (updatedData) => {
-    if (isEditing && editingTask) {
-      // Обновление существующей задачи
-      updateTask(editingTask.id, updatedData);
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const taskToDelete = tasks.find(task => task.id === taskId);
+      await deleteTask(taskId);
       
       api.success({
-        message: 'Задача обновлена',
-        description: `Задача "${updatedData.title}" успешно обновлена.`,
+        message: 'Задача удалена',
+        description: `Задача "${taskToDelete?.title}" успешно удалена.`,
         placement: 'topRight',
       });
-    } else {
-      // Создание новой задачи
-      handleTaskCreate(updatedData);
+    } catch (error) {
+      api.error({
+        message: 'Ошибка',
+        description: 'Не удалось удалить задачу',
+        placement: 'topRight',
+      });
     }
-
-    // Сброс состояния формы
-    handleFormClose();
   };
 
-  // Закрытие формы
+  const handleTaskSave = async (updatedData) => {
+    try {
+      if (isEditing && editingTask) {
+        await updateTask(editingTask.id, updatedData);
+        
+        api.success({
+          message: 'Задача обновлена',
+          description: `Задача "${updatedData.title}" успешно обновлена.`,
+          placement: 'topRight',
+        });
+      } else {
+        await handleTaskCreate(updatedData);
+      }
+
+      handleFormClose();
+    } catch (error) {
+      api.error({
+        message: 'Ошибка',
+        description: 'Не удалось сохранить задачу',
+        placement: 'topRight',
+      });
+    }
+  };
+
   const handleFormClose = () => {
     setIsFormVisible(false);
     setIsEditing(false);
     setEditingTask(null);
   };
 
-  // Открытие формы для создания новой задачи
   const handleNewTask = () => {
     setEditingTask(null);
     setIsEditing(false);
@@ -194,6 +215,7 @@ const ProjectPage = () => {
               onSubmit={handleTaskSave}
               task={editingTask}
               isEditing={isEditing}
+              projectId={projectId} // Добавьте эту строку
             />
           </div>
         </ContentLayout>
