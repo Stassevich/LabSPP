@@ -4,10 +4,10 @@ import { Modal, Form, Input, Select, Button } from "antd";
 const { TextArea } = Input;
 const { Option } = Select;
 
-const TaskEditForm = ({ visible, onCancel, onSubmit, task, isEditing }) => {
+const TaskEditForm = ({ visible, onCancel, onSubmit, task, isEditing, projectId }) => {
   const [form] = Form.useForm();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (task && visible) {
       form.setFieldsValue({
         title: task.title,
@@ -15,13 +15,37 @@ const TaskEditForm = ({ visible, onCancel, onSubmit, task, isEditing }) => {
         assignee: task.assignee,
         status: task.status
       });
+    } else if (!isEditing && visible) {
+      // Сброс формы для новой задачи
+      form.resetFields();
+      form.setFieldsValue({
+        status: 'todo'
+      });
     }
-  }, [task, visible, form]);
+  }, [task, visible, form, isEditing]);
 
   const handleSubmit = () => {
     form.validateFields().then(values => {
-      onSubmit(values);
-      form.resetFields();
+      let taskData;
+      
+      if (isEditing && task) {
+        // Для редактирования: сохраняем все поля существующей задачи + обновленные значения
+        taskData = {
+          ...task, // сохраняем все оригинальные поля (включая id и projectId)
+          ...values // перезаписываем обновленными значениями
+        };
+      } else {
+        // Для создания новой задачи: используем значения формы + projectId
+        taskData = {
+          ...values,
+          projectId: projectId
+        };
+      }
+      
+      console.log('Submitting task data:', taskData); // для отладки
+      onSubmit(taskData);
+    }).catch(error => {
+      console.error('Form validation failed:', error);
     });
   };
 
